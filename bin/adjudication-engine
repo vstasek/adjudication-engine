@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "adjudication/engine"
+
+require 'json'
+
+claims_data = ARGV[0]
+
+if claims_data.nil?
+  puts <<-HEREDOC
+Please provide path to claims data.
+
+\t./bin/adjudication-engine CLAIMS_JSON
+
+HEREDOC
+
+  exit
+end
+
+claims = JSON.parse(File.open(claims_data).read)
+processed_claims = Adjudication::Engine.run(claims)
+
+if processed_claims.empty?
+  puts "No claims were processed. Make sure to return claims from Adjudication::Engine::run to make this work."
+else
+  processed_claims.each do |claim|
+    puts <<-HEREDOC
+  claim: #{claim.number}
+  \t#{claim.line_items.map { |line_item| line_item.inspect }.join("\n\t")}
+  HEREDOC
+  end
+end
+
