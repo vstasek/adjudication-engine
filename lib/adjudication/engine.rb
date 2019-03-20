@@ -9,9 +9,12 @@ module Adjudication
       fetcher = Adjudication::Providers::Fetcher.new
       provider_data = fetcher.provider_data
 
-      # TODO filter resulting provider data, match it up to claims data by
-      # provider NPI (national provider ID), and run the adjudicator.
-      # This method should return the processed claims
+      # STEP 2: Filter the provider data (filter invalid NPIs)
+      # STEP 3: Our claims are in claims_data, an array of hashes
+      # STEP 4: Match provider data up to claims data by NPI
+      # STEP 5: run the adjudicator (Adjudication::Engine::Adjudicator.adjudicate)
+      
+      # return the processed claims
 
       []
     end

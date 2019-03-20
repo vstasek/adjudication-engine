@@ -9,7 +9,8 @@ module Adjudication
 
 
       def adjudicate(claim)
-        # TODO implement adjudication rules, and add any processed claims (regardless
+
+        # STEP 5: implement adjudication rules, and add any processed claims (regardless
         # of status) into the processed_claims attribute.
       end
     end
