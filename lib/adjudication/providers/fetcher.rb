@@ -33,16 +33,16 @@ module Adjudication
 
         # Allow only numeric NPIs of length 10
         prov_data.each { |prov_hash|
-
           if not prov_hash["NPI"].scan(/\D/).empty?
             STDERR.puts "Invalid Provider NPI (Only numeric NPIs allowed): " + prov_hash["NPI"]
-            prov_data.delete(prov_hash)
+            prov_hash["delete"] = "Y" # mark for deletion AFTER loop is finished
           elsif not prov_hash["NPI"].length == 10
             STDERR.puts "Invalid Provider NPI (NPI length must = 10): " + prov_hash["NPI"]
-            prov_data.delete(prov_hash)
+            prov_hash["delete"] = "Y"
           end
         }
-        prov_data
+
+        prov_data.delete_if {|prov_hash| prov_hash["delete"] == "Y" }
       end
     end
   end
