@@ -7,15 +7,17 @@ module Adjudication
   module Engine
     def self.run claims_data
       fetcher = Adjudication::Providers::Fetcher.new
-      provider_data = fetcher.provider_data
+      prov_data = fetcher.provider_data # STEP 1
+      prov_data = fetcher.filter_data(prov_data) # STEP 2
 
-      # STEP 2: Filter the provider data (filter invalid NPIs)
-      # STEP 3: Our claims are in claims_data, an array of hashes
-      # STEP 4: Match provider data up to claims data by NPI
-      # STEP 5: run the adjudicator (Adjudication::Engine::Adjudicator.adjudicate)
-      
+      # STEP 3: Our claims are already in claims_data (from ARGV[0])
+
+      adjudicator = Adjudication::Engine::Adjudicator.new
+      adjudicator.matchNPI(claims_data, prov_data) # STEP 4
+
+      # STEP 5: run the adjudicator
+
       # return the processed claims
-
       []
     end
   end
