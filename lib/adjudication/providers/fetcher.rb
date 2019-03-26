@@ -26,6 +26,23 @@ module Adjudication
       end
 
       def filter_data prov_data
+        # STEP 2: Filter invalid NPIS from provider data
+
+        # Remove Provider rows with nil NPIs
+        prov_data.select! { |prov_hash| not prov_hash["NPI"].nil? }
+
+        # Allow only numeric NPIs of length 10
+        prov_data.each { |prov_hash|
+
+          if not prov_hash["NPI"].scan(/\D/).empty?
+            STDERR.puts "Invalid Provider NPI (Only numeric NPIs allowed): " + prov_hash["NPI"]
+            prov_data.delete(prov_hash)
+          elsif not prov_hash["NPI"].length == 10
+            STDERR.puts "Invalid Provider NPI (NPI length must = 10): " + prov_hash["NPI"]
+            prov_data.delete(prov_hash)
+          end
+        }
+        prov_data
       end
     end
   end
