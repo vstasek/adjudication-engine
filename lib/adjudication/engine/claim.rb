@@ -9,7 +9,8 @@ module Adjudication
         :subscriber,
         :patient,
         :start_date,
-        :line_items
+        :line_items,
+        :in_network
       )
 
       def initialize claim_hash
@@ -19,6 +20,7 @@ module Adjudication
         @patient = claim_hash['patient']
         @start_date = claim_hash['start_date']
         @line_items = claim_hash['line_items'].map{ |x| ClaimLineItem.new(x) }
+        @in_network = claim_hash['in_network']
       end
 
       def procedure_codes
