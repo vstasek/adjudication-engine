@@ -16,9 +16,13 @@ module Adjudication
       adjudicator.matchNPI(claims_data, prov_data) # STEP 4
 
       # STEP 5: run the adjudicator
+      adjudicator = Adjudication::Engine::Adjudicator.new
+      claims_data.each do |claim_hash|
+        claim = Adjudication::Engine::Claim.new claim_hash
+        adjudicator.adjudicate(claim)
+      end
 
-      # return the processed claims
-      []
+      adjudicator.processed_claims
     end
   end
 end
