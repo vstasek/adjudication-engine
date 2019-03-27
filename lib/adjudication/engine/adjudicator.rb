@@ -62,14 +62,16 @@ module Adjudication
     
       private
         def duplicate?(claim)
-          # checks claim against @processed_claims claim is a duplicate
+          # checks claim against @processed_claims to see if claim is a duplicate
           ##
           # EDGE CASE NOTE: Due to the use of Set when comparing claim procedure codes,
           # "duplicate?" will still return true EVEN IF
           # one of the claims has duplicates of a procedure code and the other claim does not.
 
-          # (e.g. proc_claim has "D1110, D1110" & claim has "D1110" will return true)
-          # I'm not sure if it's POSSIBLE for a single claim to have duplicate procedure codes.
+          # (e.g. 
+          # @processed_claims has line item 1:"D1110" & line item 2: "D1110"
+          # argument claim has "D1110" - duplicate?(claim) will return true)
+          # I'm not sure if it's POSSIBLE for a single claim to have duplicate line item procedure codes.
           # If so, we would need a different implementation for comparing procedure_codes.
           ##
 
