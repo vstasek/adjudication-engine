@@ -6,6 +6,33 @@ RSpec.describe Adjudication::Engine do
   end
 
   describe Adjudication::Engine::Adjudicator do
+    def claim(params = {})
+      defaults = {
+        "npi" => "1811052616",
+        "in_network" => true,
+        "number" => "2017-09-01-123214",
+        "start_date" => "2017-09-01",
+
+        "subscriber" => {
+          "ssn" => "000-11-7777",
+          "group_number" => "US00123"
+        },
+        "patient" => {
+          "ssn" => "000-12-5555",
+          "relationship" => "spouse"
+        },
+        "line_items" => [
+          {
+            "procedure_code" => "D1110",
+            "tooth_code" => nil,
+            "charged" => 100
+          }
+        ]
+      }
+
+      Adjudication::Engine::Claim.new(defaults.merge(params))
+    end
+
     it "determines out of network claims" do
       claims_data = [
       {"npi" => "1234567890"}, # In Network
@@ -25,14 +52,81 @@ RSpec.describe Adjudication::Engine do
 
       adjudicator = Adjudication::Engine::Adjudicator.new
       adjudicator.matchNPI(claims_data, prov_data)
-      how_many  = claims_data.count { |claim| claim["in_network"] == true }
+      how_many = claims_data.count { |claim| claim["in_network"] == true }
 
       expect(how_many).to be 2
     end
 
-    it "rejects out of network claims"
-    it "rejects duplicate claims"
-    it "pays valid line items"
-    it "rejects invalid line items"
+    it "rejects out of network claims" do
+      claim = claim("in_network" => false)
+      adjudicator = Adjudication::Engine::Adjudicator.new
+
+      processed_claims = adjudicator.adjudicate(claim)
+      claim_line = processed_claims[0].line_items[0]
+
+      expect(claim_line.status_code).to eq("R")
+    end
+    
+    it "rejects duplicate claims" do
+      claimOne = claim()
+      claimTwo = claim()
+      adjudicator = Adjudication::Engine::Adjudicator.new
+
+      adjudicator.adjudicate(claimOne)
+      processed_claims = adjudicator.adjudicate(claimTwo)
+      claim_line_one = processed_claims[0].line_items[0]
+      claim_line_two = processed_claims[1].line_items[0]
+
+      expect(claim_line_one.status_code).to eq("P")
+      expect(claim_line_two.status_code).to eq("R")
+    end
+
+    it "rejects invalid line items" do
+      claim = claim("line_items" => [
+        {
+          "procedure_code" => "D2200"
+        }
+      ])
+      
+      expect(claim.line_items[0].ortho?).to be false
+      expect(claim.line_items[0].preventive_and_diagnostic?).to be false
+
+      adjudicator = Adjudication::Engine::Adjudicator.new
+      processed_claims = adjudicator.adjudicate(claim)
+      claim_line = processed_claims[0].line_items[0]
+
+      expect(claim_line.status_code).to eq("R")
+    end
+
+    it "pays preventive and diagnostic line items at 100%" do
+      claim = claim() # default line item is p&d
+      
+      expect(claim.line_items[0].preventive_and_diagnostic?).to be true
+
+      adjudicator = Adjudication::Engine::Adjudicator.new
+      processed_claims = adjudicator.adjudicate(claim)
+      claim_line = processed_claims[0].line_items[0]
+
+      expect(claim_line.status_code).to eq("P")
+      expect(claim_line.patient_paid).to eq(0)
+    end
+
+    it "pays orthodontic line items at 25%" do
+      claim = claim("line_items" => [
+        {
+          "procedure_code" => "D8090",
+          "charged" => 100
+        }
+      ])
+      
+      expect(claim.line_items[0].ortho?).to be true
+
+      adjudicator = Adjudication::Engine::Adjudicator.new
+      processed_claims = adjudicator.adjudicate(claim)
+      claim_line = processed_claims[0].line_items[0]
+
+      expect(claim_line.status_code).to eq("P")
+      expect(claim_line.patient_paid).to eq(75)
+    end
   end
 end
